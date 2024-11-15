@@ -4,8 +4,8 @@ interface PaginationProps {
   currentPage: number;
   dataPerPage: number;
   totalPages: number;
-  handlePreviousPage: any;
-  handleNextPage: any;
+  handlePreviousPage:  () => void;
+  handleNextPage:  () => void;
 }
 
 const PaginationControls = ({ currentPage, dataPerPage, totalPages, handlePreviousPage, handleNextPage }: PaginationProps) => {

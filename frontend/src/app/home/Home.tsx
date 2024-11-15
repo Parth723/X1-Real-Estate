@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/lib/redux/store';
 import { setSelectedUser } from '@/lib/redux/slices/userSlice';
@@ -13,6 +13,7 @@ import Spinner from '@/components/atoms/loaders/Spinner';
 import { getAllUsers } from '@/modules/services/user/userService';
 import { updateUsersForHome } from '@/modules/services/user_home_relationship/userHomeRelationship';
 import Alert from '@/components/atoms/alert/Alert';
+import { HomesResponse, User } from '@/modules/helpers/models/interfaces';
 
 const Homes = () => {
   const dispatch = useDispatch();
@@ -23,11 +24,11 @@ const Homes = () => {
   const [page, setPage] = useState(1);
   const pageSize = 10;
 
-  const [homesData, setHomesData] = useState<any>(null);
+  const [homesData, setHomesData] = useState<HomesResponse | null>(null);
   const [homesLoading, setHomesLoading] = useState(true);
   const [homesError, setHomesError] = useState<string | null>(null);
 
-  const [usersData, setUsersData] = useState<any>(null);
+  const [usersData, setUsersData] = useState<User[]>([]);
   const [usersLoading, setUsersLoading] = useState(true);
 
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
@@ -48,27 +49,32 @@ const Homes = () => {
     fetchUsers();
   }, []);
 
-  const fetchHomesData = async () => {
+  const fetchHomesData = useCallback(async () => {
     if (!selectedUser) {
-      setHomesData([]);
+      setHomesData(null);
       setHomesLoading(false);
       return;
     }
-
+  
     setHomesLoading(true);
     try {
       const data = await homeService(selectedUser, page, pageSize);
       setHomesData(data);
-    } catch (error: any) {
-      setHomesError(error.message || 'Failed to fetch homes');
+      console.log("Checking in home.tsx: ", data);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setHomesError(error.message);
+      } else {
+        setHomesError('Failed to fetch homes');
+      }
     } finally {
       setHomesLoading(false);
     }
-  };
+  }, [selectedUser, page]);
 
   useEffect(() => {
     fetchHomesData();
-  }, [selectedUser, page]);
+  }, [selectedUser, page, fetchHomesData]);
 
   useEffect(() => {
     const fetchUsersForHome = async () => {
@@ -100,7 +106,7 @@ const Homes = () => {
 
     if (selectedHomeId) {
       try {
-        const result = await updateUsersForHome({
+        await updateUsersForHome({
           homeId: selectedHomeId,
           updatedUsers: updatedUserIds,
         });
@@ -122,7 +128,7 @@ const Homes = () => {
     }
   };
 
-  const mapUsersToDropdownOptions = (users: any[]) => {
+  const mapUsersToDropdownOptions = (users: User[]) => {
     return users.map((user: { id: number; username: string }) => ({
       id: user.id,
       label: user.username,
@@ -170,24 +176,26 @@ const Homes = () => {
           <Spinner />
         ) : homesError ? (
           <p>{homesError}</p>
-        ) : homesData?.data?.length > 0 ? (
+        ) : homesData && homesData.data && homesData.data.length > 0 ? (
           <HomeCards homes={homesData.data} onOpenModal={handleOpenModal} />
         ) : (
           <p>No homes available for the selected user.</p>
         )}
       </div>
 
-      {homesData?.total > 0 && (
+
+      {homesData && homesData.total !== undefined && homesData.total > 0 && (
         <div className="w-full flex justify-center items-center">
           <PaginationControls
             currentPage={page}
             dataPerPage={pageSize}
-            totalPages={homesData?.total || 0}
+            totalPages={homesData.total}
             handlePreviousPage={() => setPage(page - 1)}
             handleNextPage={() => setPage(page + 1)}
           />
         </div>
       )}
+
 
       <EditUserModal
         isOpen={isModalOpen}

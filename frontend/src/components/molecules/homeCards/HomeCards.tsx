@@ -1,7 +1,7 @@
 import React from 'react';
 import '../../../app/globals.css';
 
-interface Home {
+interface HomeCards {
   id: number;
   street_address: string;
   state: string;
@@ -13,7 +13,7 @@ interface Home {
 }
 
 interface HomeCardsProps {
-  homes: Home[];
+  homes: HomeCards[];
   onOpenModal: (homeId: number) => void;
 }
 
@@ -21,7 +21,7 @@ const HomeCards: React.FC<HomeCardsProps> = ({ homes, onOpenModal }) => {
    
   return (
     <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 p-4">
-      {homes.map((home) => (
+      {homes.map((home: HomeCards) => (
         <div key={home.id} className="bg-violet-400 border border-violet-900 rounded-lg shadow-md p-4">
           <h2 className="text-lg font-bold mb-2">{home.street_address}</h2>
           <p><strong>State:</strong> {home.state || 'N/A'}</p>

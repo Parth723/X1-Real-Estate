@@ -9,7 +9,7 @@ export async function homeService(selectedUser: number, page: number = 1, pageSi
         page,      
         pageSize 
       }   
-    });
+    });    
     return response.data;
   } catch (error) {
     console.error("Error fetching homes:", error);
